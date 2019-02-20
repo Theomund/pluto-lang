@@ -2,6 +2,7 @@ module Parser where
 
 import Syntax
 
+import Control.Monad (void)
 import Control.Monad.Combinators.Expr
 import Data.Void
 import Text.Megaparsec
@@ -32,13 +33,35 @@ expr :: Parser Expr
 expr = makeExprParser terms operators
 
 terms :: Parser Expr
-terms = parens expr <|> Constant <$> integer
+terms = parens expr <|> Constant <$> integer <|> Var <$> identifier
 
 operators :: [[Operator Parser Expr]]
 operators =
-  [ [InfixL (Binary Mul <$ symbol "*"), InfixL (Binary Div <$ symbol "/")]
+  [ [Prefix (Neg <$ symbol "-")]
+  , [InfixL (Binary Mul <$ symbol "*"), InfixL (Binary Div <$ symbol "/")]
   , [InfixL (Binary Add <$ symbol "+"), InfixL (Binary Sub <$ symbol "-")]
   ]
 
-parser :: Parser Expr
-parser = between sc eof expr
+rword :: String -> Parser ()
+rword w = (lexeme . try) (string w *> notFollowedBy alphaNumChar)
+
+rws :: [String]
+rws = []
+
+identifier :: Parser String
+identifier = (lexeme . try) (p >>= check)
+  where
+    p = (:) <$> letterChar <*> many alphaNumChar
+    check x =
+      if x `elem` rws
+        then fail $ "keyword " ++ show x ++ " cannot be an identifier"
+        else return x
+
+assign :: Parser Stmt
+assign = do
+  var <- identifier
+  void (symbol "=")
+  Assign var <$> expr
+
+parser :: Parser Stmt
+parser = between sc eof assign
