@@ -26,6 +26,9 @@ symbol = L.symbol sc
 parens :: Parser a -> Parser a
 parens = between (symbol "(") (symbol ")")
 
+brackets :: Parser a -> Parser a
+brackets = between (symbol "{") (symbol "}")
+
 integer :: Parser Integer
 integer = lexeme L.decimal
 
@@ -46,7 +49,7 @@ rword :: String -> Parser ()
 rword w = (lexeme . try) (string w *> notFollowedBy alphaNumChar)
 
 rws :: [String]
-rws = []
+rws = ["if"]
 
 identifier :: Parser String
 identifier = (lexeme . try) (p >>= check)
@@ -63,5 +66,14 @@ assign = do
   void (symbol "=")
   Assign var <$> expr
 
+while :: Parser Stmt
+while = do
+  rword "while"
+  cond <- (parens expr)
+  While cond <$> brackets stmt
+
+stmt :: Parser Stmt
+stmt = assign <|> while
+
 parser :: Parser Stmt
-parser = between sc eof assign
+parser = between sc eof while

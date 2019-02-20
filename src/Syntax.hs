@@ -1,8 +1,10 @@
 module Syntax where
 
-data Stmt =
-  Assign String
-         Expr
+data Stmt
+  = Assign String
+           Expr
+  | While Expr
+          Stmt
   deriving (Show)
 
 data Expr
