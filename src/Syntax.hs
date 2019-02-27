@@ -1,19 +1,18 @@
 module Syntax where
 
-data Stmt
-  = Assign String
-           Expr
-  | While Expr
-          Stmt
+data Statement
+  = ExpressionStatement [Expression]
+  | CompoundStatement [Statement]
   deriving (Show)
 
-data Expr
-  = Constant Integer
-  | Var String
-  | Neg Expr
+data Expression
+  = Assignment String
+               Expression
+  | Constant Integer
+  | Variable String
   | Binary Op
-           Expr
-           Expr
+           Expression
+           Expression
   deriving (Show)
 
 data Op
