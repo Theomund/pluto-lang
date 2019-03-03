@@ -1,8 +1,17 @@
 module Syntax where
 
+type Name = String
+
 data Statement
   = ExpressionStatement [Expression]
   | CompoundStatement [Statement]
+  | If [Expression]
+       Statement
+  | IfElse [Expression]
+           Statement
+           Statement
+  | While [Expression]
+          Statement
   deriving (Show)
 
 data Expression
@@ -13,6 +22,11 @@ data Expression
   | Binary Op
            Expression
            Expression
+  deriving (Show)
+
+data Declaration =
+  Function Name
+           Statement
   deriving (Show)
 
 data Op

@@ -23,9 +23,9 @@ arithmeticOperators =
 
 assignmentExpression :: Parser Expression
 assignmentExpression = do
-  id <- identifier
-  void (symbol "=")
-  Assignment id <$> arithmeticExpression
+  ident <- identifier
+  void equals
+  Assignment ident <$> arithmeticExpression
 
 expression :: Parser [Expression]
 expression = sepBy1 assignmentExpression comma
@@ -41,8 +41,39 @@ expressionStatement = do
   void semi
   return $ ExpressionStatement expr
 
-statement :: Parser Statement
-statement = compoundStatement <|> expressionStatement
+ifStatement :: Parser Statement
+ifStatement = do
+  rword "if"
+  cond <- parens expression
+  If cond <$> statement
 
-parser :: Parser Statement
-parser = between sc eof statement
+ifElseStatement :: Parser Statement
+ifElseStatement = do
+  rword "if"
+  cond <- parens expression
+  stmt <- statement
+  rword "else"
+  IfElse cond stmt <$> statement
+
+whileStatement :: Parser Statement
+whileStatement = do
+  rword "while"
+  cond <- parens expression
+  While cond <$> statement
+
+statement :: Parser Statement
+statement =
+  expressionStatement <|> compoundStatement <|> try ifElseStatement <|>
+  ifStatement <|>
+  whileStatement
+
+declaration :: Parser Declaration
+declaration = do
+  rword "int"
+  name <- identifier
+  void (symbol "(")
+  void (symbol ")")
+  Function name <$> statement
+
+parser :: Parser [Declaration]
+parser = between sc eof (some declaration)

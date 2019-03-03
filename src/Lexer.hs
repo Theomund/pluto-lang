@@ -32,7 +32,7 @@ rword :: String -> Parser ()
 rword w = (lexeme . try) (string w *> notFollowedBy alphaNumChar)
 
 rws :: [String]
-rws = []
+rws = ["if", "else", "while", "int"]
 
 identifier :: Parser String
 identifier = (lexeme . try) (p >>= check)
@@ -48,3 +48,6 @@ semi = symbol ";"
 
 comma :: Parser String
 comma = symbol ","
+
+equals :: Parser String
+equals = symbol "="
