@@ -3,25 +3,32 @@ module Syntax where
 type Name = String
 
 data Statement
-  = ExpressionStatement [Expression]
+  = ExpressionStatement Expression
   | CompoundStatement [Statement]
-  | If [Expression]
+  | If Expression
        Statement
-  | IfElse [Expression]
+  | IfElse Expression
            Statement
            Statement
-  | While [Expression]
+  | While Expression
           Statement
+  | Return Expression
   deriving (Show)
 
 data Expression
-  = Assignment String
+  = Assignment AOp
+               Expression
+               Expression
+  | Comparison COp
+               Expression
                Expression
   | Constant Integer
   | Variable String
-  | Binary Op
+  | Binary AOp
            Expression
            Expression
+  | Unary UOp
+          Expression
   deriving (Show)
 
 data Declaration =
@@ -29,9 +36,24 @@ data Declaration =
            Statement
   deriving (Show)
 
-data Op
+data AOp
   = Add
   | Sub
   | Mul
   | Div
+  | Basic
+  deriving (Show)
+
+data COp
+  = Equal
+  | NotEqual
+  | LessThan
+  | GreaterThan
+  | LessEqual
+  | GreaterEqual
+  deriving (Show)
+
+data UOp
+  = Plus
+  | Minus
   deriving (Show)

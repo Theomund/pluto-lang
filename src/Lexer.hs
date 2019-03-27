@@ -32,7 +32,7 @@ rword :: String -> Parser ()
 rword w = (lexeme . try) (string w *> notFollowedBy alphaNumChar)
 
 rws :: [String]
-rws = ["if", "else", "while", "int"]
+rws = ["if", "else", "while", "return", "int"]
 
 identifier :: Parser String
 identifier = (lexeme . try) (p >>= check)
