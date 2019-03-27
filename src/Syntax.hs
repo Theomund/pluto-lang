@@ -13,7 +13,7 @@ data Statement
   | While Expression
           Statement
   | Return Expression
-  deriving (Show)
+  deriving (Show, Eq)
 
 data Expression
   = Assignment AOp
@@ -29,12 +29,12 @@ data Expression
            Expression
   | Unary UOp
           Expression
-  deriving (Show)
+  deriving (Show, Eq)
 
 data Declaration =
   Function Name
            Statement
-  deriving (Show)
+  deriving (Show, Eq)
 
 data AOp
   = Add
@@ -42,7 +42,7 @@ data AOp
   | Mul
   | Div
   | Basic
-  deriving (Show)
+  deriving (Show, Eq)
 
 data COp
   = Equal
@@ -51,9 +51,9 @@ data COp
   | GreaterThan
   | LessEqual
   | GreaterEqual
-  deriving (Show)
+  deriving (Show, Eq)
 
 data UOp
   = Plus
   | Minus
-  deriving (Show)
+  deriving (Show, Eq)

@@ -6,7 +6,6 @@ import Syntax
 import Control.Monad (void)
 import Control.Monad.Combinators.Expr
 import Text.Megaparsec
-import Text.Megaparsec.Debug
 
 arithmeticExpression :: Parser Expression
 arithmeticExpression = makeExprParser arithmeticTerms arithmeticOperators
@@ -68,9 +67,10 @@ variableExpression = Variable <$> identifier
 
 expression :: Parser Expression
 expression =
-  arithmeticExpression <|> assignmentExpression <|> comparisonExpression <|>
-  constantExpression <|>
-  variableExpression
+  try assignmentExpression <|> try arithmeticExpression <|>
+  try comparisonExpression <|>
+  try constantExpression <|>
+  try variableExpression
 
 compoundStatement :: Parser Statement
 compoundStatement = do
@@ -112,7 +112,7 @@ returnStatement = do
 
 statement :: Parser Statement
 statement =
-  returnStatement <|> expressionStatement <|> try compoundStatement <|>
+  returnStatement <|> expressionStatement <|> compoundStatement <|>
   ifElseStatement <|>
   ifStatement <|>
   whileStatement
@@ -126,4 +126,4 @@ declaration = do
   Function name <$> statement
 
 parser :: Parser [Declaration]
-parser = between sc eof (dbg "DEBUG" (some declaration))
+parser = between sc eof (some declaration)
