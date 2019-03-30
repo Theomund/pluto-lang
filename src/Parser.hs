@@ -6,124 +6,131 @@ import Syntax
 import Control.Monad (void)
 import Control.Monad.Combinators.Expr
 import Text.Megaparsec
+import Text.Megaparsec.Debug
 
-arithmeticExpression :: Parser Expression
-arithmeticExpression = makeExprParser arithmeticTerms arithmeticOperators
+constantExpr :: Parser Expr
+constantExpr = Constant <$> integer
 
-arithmeticTerms :: Parser Expression
-arithmeticTerms =
-  parens arithmeticExpression <|> variableExpression <|> constantExpression
+identifierExpr :: Parser Expr
+identifierExpr = Identifier <$> identifier
 
-arithmeticOperators :: [[Operator Parser Expression]]
-arithmeticOperators =
-  [ [Prefix (Unary Plus <$ symbol "+"), Prefix (Unary Minus <$ symbol "-")]
-  , [InfixL (Binary Mul <$ symbol "*"), InfixL (Binary Div <$ symbol "/")]
+callExpr :: Parser Expr
+callExpr = do
+  name <- identifier
+  args <- parens $ sepBy expr (symbol ",")
+  return $ Call name args
+
+expr :: Parser Expr
+expr = makeExprParser exprTerms exprOperators
+
+exprTerms :: Parser Expr
+exprTerms = choice [try callExpr, identifierExpr, constantExpr, parens expr]
+
+exprOperators :: [[Operator Parser Expr]]
+exprOperators =
+  [ [ Prefix (Unary Plus <$ symbol "+")
+    , Prefix (Unary Minus <$ symbol "-")
+    , Prefix (Unary Not <$ symbol "!")
+    ]
+  , [ InfixL (Binary Mul <$ symbol "*")
+    , InfixL (Binary Div <$ symbol "/")
+    , InfixL (Binary Mod <$ symbol "%")
+    ]
   , [InfixL (Binary Add <$ symbol "+"), InfixL (Binary Sub <$ symbol "-")]
+  , [ InfixL (Binary LessEqual <$ symbol "<=")
+    , InfixL (Binary GreaterEqual <$ symbol ">=")
+    , InfixL (Binary LessThan <$ symbol "<")
+    , InfixL (Binary GreaterThan <$ symbol ">")
+    ]
+  , [ InfixL (Binary Equal <$ symbol "==")
+    , InfixL (Binary NotEqual <$ symbol "!=")
+    ]
+  , [InfixL (Binary And <$ symbol "&&")]
+  , [InfixL (Binary Or <$ symbol "||")]
+  , [InfixR (Binary Assign <$ symbol "=")]
   ]
 
-assignmentExpression :: Parser Expression
-assignmentExpression = makeExprParser assignmentTerms assignmentOperators
+item :: Parser Item
+item = choice [StmtItem <$> stmt, DeclItem <$> decl]
 
-assignmentTerms :: Parser Expression
-assignmentTerms =
-  parens assignmentExpression <|> variableExpression <|> constantExpression
+compoundStmt :: Parser Stmt
+compoundStmt = do
+  items <- brackets $ many item
+  return $ CompoundStmt items
 
-assignmentOperators :: [[Operator Parser Expression]]
-assignmentOperators =
-  [ [InfixL (Assignment Basic <$ symbol "=")]
-  , [ InfixL (Assignment Mul <$ symbol "*=")
-    , InfixL (Assignment Div <$ symbol "/=")
-    ]
-  , [ InfixL (Assignment Add <$ symbol "+=")
-    , InfixL (Assignment Sub <$ symbol "-=")
-    ]
-  ]
+exprStmt :: Parser Stmt
+exprStmt = do
+  expr <- expr
+  symbol ";"
+  return $ ExprStmt expr
 
-comparisonExpression :: Parser Expression
-comparisonExpression = makeExprParser comparisonTerms comparisonOperators
-
-comparisonTerms :: Parser Expression
-comparisonTerms =
-  parens comparisonExpression <|> variableExpression <|> constantExpression
-
-comparisonOperators :: [[Operator Parser Expression]]
-comparisonOperators =
-  [ [ InfixL (Comparison Equal <$ symbol "==")
-    , InfixL (Comparison NotEqual <$ symbol "!=")
-    ]
-  , [ InfixL (Comparison LessThan <$ symbol "<")
-    , InfixL (Comparison GreaterThan <$ symbol ">")
-    ]
-  , [ InfixL (Comparison LessEqual <$ symbol "<=")
-    , InfixL (Comparison GreaterEqual <$ symbol ">=")
-    ]
-  ]
-
-constantExpression :: Parser Expression
-constantExpression = Constant <$> integer
-
-variableExpression :: Parser Expression
-variableExpression = Variable <$> identifier
-
-expression :: Parser Expression
-expression =
-  try assignmentExpression <|> try arithmeticExpression <|>
-  try comparisonExpression <|>
-  try constantExpression <|>
-  try variableExpression
-
-compoundStatement :: Parser Statement
-compoundStatement = do
-  stmt <- brackets $ many statement
-  return $ CompoundStatement stmt
-
-expressionStatement :: Parser Statement
-expressionStatement = do
-  expr <- expression
-  void semi
-  return $ ExpressionStatement expr
-
-ifStatement :: Parser Statement
-ifStatement = do
+ifStmt :: Parser Stmt
+ifStmt = do
   rword "if"
-  cond <- parens expression
-  If cond <$> statement
+  cond <- parens expr
+  If cond <$> stmt
 
-ifElseStatement :: Parser Statement
-ifElseStatement = do
+ifElseStmt :: Parser Stmt
+ifElseStmt = do
   rword "if"
-  cond <- parens expression
-  stmt <- statement
+  cond <- parens expr
+  body <- stmt
   rword "else"
-  IfElse cond stmt <$> statement
+  IfElse cond body <$> stmt
 
-whileStatement :: Parser Statement
-whileStatement = do
+whileStmt :: Parser Stmt
+whileStmt = do
   rword "while"
-  cond <- parens expression
-  While cond <$> statement
+  cond <- parens expr
+  While cond <$> stmt
 
-returnStatement :: Parser Statement
-returnStatement = do
+doWhileStmt :: Parser Stmt
+doWhileStmt = do
+  rword "do"
+  body <- stmt
+  rword "while"
+  cond <- parens expr
+  symbol ";"
+  return $ DoWhile body cond
+
+returnStmt :: Parser Stmt
+returnStmt = do
   rword "return"
-  expr <- expression
-  void semi
-  return $ Return expr
+  value <- expr
+  symbol ";"
+  return $ Return value
 
-statement :: Parser Statement
-statement =
-  returnStatement <|> expressionStatement <|> compoundStatement <|>
-  ifElseStatement <|>
-  ifStatement <|>
-  whileStatement
+stmt :: Parser Stmt
+stmt =
+  choice
+    [ try ifElseStmt
+    , ifStmt
+    , whileStmt
+    , doWhileStmt
+    , returnStmt
+    , exprStmt
+    , compoundStmt
+    ]
 
-declaration :: Parser Declaration
-declaration = do
+funcDecl :: Parser Decl
+funcDecl = do
   rword "int"
   name <- identifier
-  void (symbol "(")
-  void (symbol ")")
-  Function name <$> statement
+  params <- parens $ sepBy decl (symbol ",")
+  body <- stmt
+  return $ Func name params body
 
-parser :: Parser [Declaration]
-parser = between sc eof (some declaration)
+varDecl :: Parser Decl
+varDecl = do
+  rword "int"
+  name <- identifier
+  symbol "="
+  value <- expr
+  symbol ";"
+  return $ Var name value
+
+decl :: Parser Decl
+decl = choice [try funcDecl, varDecl]
+
+parser :: Parser [Decl]
+parser = between sc eof (some decl)

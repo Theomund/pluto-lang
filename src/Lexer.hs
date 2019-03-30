@@ -32,7 +32,7 @@ rword :: String -> Parser ()
 rword w = (lexeme . try) (string w *> notFollowedBy alphaNumChar)
 
 rws :: [String]
-rws = ["if", "else", "while", "return", "int"]
+rws = ["do", "if", "else", "while", "return", "int"]
 
 identifier :: Parser String
 identifier = (lexeme . try) (p >>= check)
@@ -40,14 +40,5 @@ identifier = (lexeme . try) (p >>= check)
     p = (:) <$> letterChar <*> many alphaNumChar
     check x =
       if x `elem` rws
-        then fail $ "keyword " ++ show x ++ " cannot be an identifier"
+        then fail $ "Keyword " ++ show x ++ " cannot be an identifier"
         else return x
-
-semi :: Parser String
-semi = symbol ";"
-
-comma :: Parser String
-comma = symbol ","
-
-equals :: Parser String
-equals = symbol "="

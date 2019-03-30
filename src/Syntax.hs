@@ -2,58 +2,62 @@ module Syntax where
 
 type Name = String
 
-data Statement
-  = ExpressionStatement Expression
-  | CompoundStatement [Statement]
-  | If Expression
-       Statement
-  | IfElse Expression
-           Statement
-           Statement
-  | While Expression
-          Statement
-  | Return Expression
+data Stmt
+  = ExprStmt Expr
+  | CompoundStmt [Item]
+  | If Expr
+       Stmt
+  | IfElse Expr
+           Stmt
+           Stmt
+  | While Expr
+          Stmt
+  | DoWhile Stmt
+            Expr
+  | Return Expr
   deriving (Show, Eq)
 
-data Expression
-  = Assignment AOp
-               Expression
-               Expression
-  | Comparison COp
-               Expression
-               Expression
-  | Constant Integer
-  | Variable String
-  | Binary AOp
-           Expression
-           Expression
-  | Unary UOp
-          Expression
+data Expr
+  = Constant Integer
+  | Identifier String
+  | Call Name
+         [Expr]
+  | Binary Op
+           Expr
+           Expr
+  | Unary Op
+          Expr
   deriving (Show, Eq)
 
-data Declaration =
-  Function Name
-           Statement
+data Decl
+  = Func Name
+         [Decl]
+         Stmt
+  | Var Name
+        Expr
   deriving (Show, Eq)
 
-data AOp
-  = Add
+data Item
+  = StmtItem Stmt
+  | DeclItem Decl
+  deriving (Show, Eq)
+
+data Op
+  = Plus
+  | Minus
+  | Add
   | Sub
   | Mul
   | Div
-  | Basic
-  deriving (Show, Eq)
-
-data COp
-  = Equal
+  | Mod
+  | Assign
+  | Equal
   | NotEqual
   | LessThan
   | GreaterThan
   | LessEqual
   | GreaterEqual
-  deriving (Show, Eq)
-
-data UOp
-  = Plus
-  | Minus
+  | And
+  | Or
+  | Not
   deriving (Show, Eq)
