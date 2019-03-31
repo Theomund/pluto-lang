@@ -1,10 +1,9 @@
 module Parser where
 
-import Lexer
-import Syntax
-
 import Control.Monad (void)
 import Control.Monad.Combinators.Expr
+import Lexer
+import Syntax
 import Text.Megaparsec
 import Text.Megaparsec.Debug
 
@@ -117,8 +116,7 @@ funcDecl = do
   rword "int"
   name <- identifier
   params <- parens $ sepBy decl (symbol ",")
-  body <- stmt
-  return $ Func name params body
+  return $ Func name params <$> stmt
 
 varDecl :: Parser Decl
 varDecl = do

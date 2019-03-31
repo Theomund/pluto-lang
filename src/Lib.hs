@@ -2,11 +2,13 @@ module Lib
   ( someFunc
   ) where
 
+import Analyzer
 import Parser
-
 import Text.Megaparsec
 
 someFunc :: IO ()
 someFunc = do
   input <- getContents
-  parseTest parser input
+  case parse parser "" input of
+    Left bundle -> putStr (errorBundlePretty bundle)
+    Right xs -> mapM_ checkMain xs
