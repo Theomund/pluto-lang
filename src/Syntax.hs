@@ -31,7 +31,6 @@ data Expr
 
 data Decl
   = Func Name
-         [Decl]
          Stmt
   | Var Name
         Expr

@@ -11,4 +11,4 @@ someFunc = do
   input <- getContents
   case parse parser "" input of
     Left bundle -> putStr (errorBundlePretty bundle)
-    Right xs -> mapM_ checkMain xs
+    Right xs -> print $ (checkMain >> checkProcedure >> checkVariable) xs

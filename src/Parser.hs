@@ -115,8 +115,9 @@ funcDecl :: Parser Decl
 funcDecl = do
   rword "int"
   name <- identifier
-  params <- parens $ sepBy decl (symbol ",")
-  return $ Func name params <$> stmt
+  symbol "("
+  symbol ")"
+  Func name <$> compoundStmt
 
 varDecl :: Parser Decl
 varDecl = do
