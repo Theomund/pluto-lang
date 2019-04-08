@@ -1,29 +1,27 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Analyzer where
 
-import Data.List
+import Control.Lens
+import Control.Lens.Extras
 import Syntax
 
+makePrisms ''Decl
+
+testFunc :: Decl -> Bool
+testFunc = any (is _Var) . universe
+
 checkMain :: [Decl] -> Bool
-checkMain [] = False
-checkMain (Func "main" _:xs) = True
-checkMain (_:xs) = False || checkMain xs
+checkMain xs = False
 
 checkProcedure :: [Decl] -> Bool
-checkProcedure [] = True
-checkProcedure xs = do
-  let names = f xs
-  length (nub names) == length names
-  where
-    f [] = []
-    f (Func a _:xs) = a : f xs
-    f (_:xs) = f xs
+checkProcedure [] = False
 
 checkVariable :: [Decl] -> Bool
-checkVariable [] = True
-checkVariable xs = do
-  let names = f xs
-  length (nub names) == length names
-  where
-    f [] = []
-    f (Var a _:xs) = a : f xs
-    f (_:xs) = f xs
+checkVariable [] = False
+
+checkArgument :: [Decl] -> Bool
+checkArgument [] = False
+
+typeCheck :: [Decl] -> Bool
+typeCheck [] = False

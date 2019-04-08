@@ -27,7 +27,8 @@ exprTerms = choice [try callExpr, identifierExpr, constantExpr, parens expr]
 
 exprOperators :: [[Operator Parser Expr]]
 exprOperators =
-  [ [ Prefix (Unary Plus <$ symbol "+")
+  [ [Postfix (Unary Inc <$ symbol "++"), Postfix (Unary Dec <$ symbol "--")]
+  , [ Prefix (Unary Plus <$ symbol "+")
     , Prefix (Unary Minus <$ symbol "-")
     , Prefix (Unary Not <$ symbol "!")
     ]
@@ -115,21 +116,36 @@ funcDecl :: Parser Decl
 funcDecl = do
   rword "int"
   name <- identifier
-  symbol "("
-  symbol ")"
-  Func name <$> compoundStmt
+  params <- parens $ sepBy (rword "int" >> identifierExpr) (symbol ",")
+  symbol ";"
+  return $ Func name params
+
+funcDef :: Parser Decl
+funcDef = do
+  rword "int"
+  name <- identifier
+  params <- parens $ sepBy (rword "int" >> identifierExpr) (symbol ",")
+  Def name params <$> compoundStmt
+
+externDecl :: Parser Decl
+externDecl = do
+  rword "extern"
+  rword "int"
+  name <- identifier
+  params <- parens $ sepBy (rword "int" >> identifierExpr) (symbol ",")
+  symbol ";"
+  return $ Extern name params
 
 varDecl :: Parser Decl
 varDecl = do
   rword "int"
   name <- identifier
-  symbol "="
-  value <- expr
+  value <- optional (symbol "=" >> expr)
   symbol ";"
   return $ Var name value
 
 decl :: Parser Decl
-decl = choice [try funcDecl, varDecl]
+decl = choice [try funcDecl, try funcDef, try externDecl, varDecl]
 
 parser :: Parser [Decl]
 parser = between sc eof (some decl)

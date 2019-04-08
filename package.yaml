@@ -24,6 +24,7 @@ dependencies:
 - parser-combinators
 - hspec
 - hspec-megaparsec
+- lens
 
 library:
   source-dirs: src

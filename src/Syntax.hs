@@ -1,4 +1,10 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+
 module Syntax where
+
+import Control.Lens
+import Data.Data
+import Data.Data.Lens (uniplate)
 
 type Name = String
 
@@ -15,7 +21,10 @@ data Stmt
   | DoWhile Stmt
             Expr
   | Return Expr
-  deriving (Show, Eq)
+  deriving (Eq, Ord, Show, Read, Data, Typeable)
+
+instance Plated Stmt where
+  plate = uniplate
 
 data Expr
   = Constant Integer
@@ -27,22 +36,38 @@ data Expr
            Expr
   | Unary Op
           Expr
-  deriving (Show, Eq)
+  deriving (Eq, Ord, Show, Read, Data, Typeable)
+
+instance Plated Expr where
+  plate = uniplate
 
 data Decl
   = Func Name
-         Stmt
+         [Expr]
+  | Extern Name
+           [Expr]
+  | Def Name
+        [Expr]
+        Stmt
   | Var Name
-        Expr
-  deriving (Show, Eq)
+        (Maybe Expr)
+  deriving (Eq, Ord, Show, Read, Data, Typeable)
+
+instance Plated Decl where
+  plate = uniplate
 
 data Item
   = StmtItem Stmt
   | DeclItem Decl
-  deriving (Show, Eq)
+  deriving (Eq, Ord, Show, Read, Data, Typeable)
+
+instance Plated Item where
+  plate = uniplate
 
 data Op
-  = Plus
+  = Inc
+  | Dec
+  | Plus
   | Minus
   | Add
   | Sub
@@ -59,4 +84,7 @@ data Op
   | And
   | Or
   | Not
-  deriving (Show, Eq)
+  deriving (Eq, Ord, Show, Read, Data, Typeable)
+
+instance Plated Op where
+  plate = uniplate
