@@ -8,8 +8,8 @@ import Syntax
 
 makePrisms ''Decl
 
-testFunc :: Decl -> Bool
-testFunc = any (is _Var) . universe
+testFunc :: Decl -> IO ()
+testFunc x = print $ x ^? _Def._1
 
 checkMain :: [Decl] -> Bool
 checkMain xs = False
