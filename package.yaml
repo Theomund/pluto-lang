@@ -25,6 +25,10 @@ dependencies:
 - hspec
 - hspec-megaparsec
 - lens
+- containers
+- llvm-hs
+- llvm-hs-pure
+- bytestring
 
 library:
   source-dirs: src

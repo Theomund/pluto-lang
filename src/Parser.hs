@@ -5,7 +5,6 @@ import Control.Monad.Combinators.Expr
 import Lexer
 import Syntax
 import Text.Megaparsec
-import Text.Megaparsec.Debug
 
 constantExpr :: Parser Expr
 constantExpr = Constant <$> integer
@@ -117,15 +116,7 @@ funcDecl = do
   rword "int"
   name <- identifier
   params <- parens $ sepBy (rword "int" >> identifierExpr) (symbol ",")
-  symbol ";"
-  return $ Func name params
-
-funcDef :: Parser Decl
-funcDef = do
-  rword "int"
-  name <- identifier
-  params <- parens $ sepBy (rword "int" >> identifierExpr) (symbol ",")
-  Def name params <$> compoundStmt
+  Func name params <$> compoundStmt
 
 externDecl :: Parser Decl
 externDecl = do
@@ -140,12 +131,13 @@ varDecl :: Parser Decl
 varDecl = do
   rword "int"
   name <- identifier
-  value <- optional (symbol "=" >> expr)
+  symbol "="
+  value <- expr
   symbol ";"
   return $ Var name value
 
 decl :: Parser Decl
-decl = choice [try funcDecl, try funcDef, try externDecl, varDecl]
+decl = choice [try funcDecl, try externDecl, varDecl]
 
 parser :: Parser [Decl]
 parser = between sc eof (some decl)

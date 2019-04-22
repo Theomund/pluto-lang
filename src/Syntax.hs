@@ -23,9 +23,6 @@ data Stmt
   | Return Expr
   deriving (Eq, Ord, Show, Read, Data, Typeable)
 
-instance Plated Stmt where
-  plate = uniplate
-
 data Expr
   = Constant Integer
   | Identifier String
@@ -38,31 +35,20 @@ data Expr
           Expr
   deriving (Eq, Ord, Show, Read, Data, Typeable)
 
-instance Plated Expr where
-  plate = uniplate
-
 data Decl
-  = Func Name
-         [Expr]
-  | Extern Name
+  = Extern Name
            [Expr]
-  | Def Name
-        [Expr]
-        Stmt
+  | Func Name
+         [Expr]
+         Stmt
   | Var Name
-        (Maybe Expr)
+        Expr
   deriving (Eq, Ord, Show, Read, Data, Typeable)
-
-instance Plated Decl where
-  plate = uniplate
 
 data Item
   = StmtItem Stmt
   | DeclItem Decl
   deriving (Eq, Ord, Show, Read, Data, Typeable)
-
-instance Plated Item where
-  plate = uniplate
 
 data Op
   = Inc
@@ -85,6 +71,3 @@ data Op
   | Or
   | Not
   deriving (Eq, Ord, Show, Read, Data, Typeable)
-
-instance Plated Op where
-  plate = uniplate

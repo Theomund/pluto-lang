@@ -2,7 +2,7 @@ module Lib
   ( someFunc
   ) where
 
-import Analyzer
+import Codegen
 import Parser
 import Text.Megaparsec
 
@@ -11,4 +11,4 @@ someFunc = do
   input <- getContents
   case parse parser "" input of
     Left bundle -> putStr (errorBundlePretty bundle)
-    Right xs -> mapM_ testFunc xs
+    Right xs -> generateModule xs
