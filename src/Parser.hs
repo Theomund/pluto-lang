@@ -50,7 +50,7 @@ exprOperators =
   ]
 
 item :: Parser Item
-item = choice [StmtItem <$> stmt, DeclItem <$> decl]
+item = choice [StmtItem <$> stmt, DeclItem <$> varDecl]
 
 compoundStmt :: Parser Stmt
 compoundStmt = do
