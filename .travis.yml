@@ -12,6 +12,7 @@ addons:
       - sourceline: 'deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-8 main'
     packages:
       - libgmp-dev
+      - llvm-8
 
 before_install:
 - mkdir -p ~/.local/bin
