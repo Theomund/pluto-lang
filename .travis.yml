@@ -8,6 +8,8 @@ cache:
 
 addons:
   apt:
+    sources:
+      - sourceline: 'deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-8 main'
     packages:
       - libgmp-dev
 
