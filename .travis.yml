@@ -10,6 +10,7 @@ addons:
   apt:
     sources:
       - sourceline: 'deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-8 main'
+        key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
     packages:
       - libgmp-dev
       - llvm-8
