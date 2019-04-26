@@ -38,8 +38,7 @@ generateModule xs =
 
 codegenDecl :: MonadModuleBuilder m => Decl -> m Operand
 codegenDecl (Var a (Constant b)) = global (mkName a) AST.i32 (C.Int 32 b)
-codegenDecl (Extern a b) =
-  extern (mkName a) [] AST.i32
+codegenDecl (Extern a b) = extern (mkName a) [] AST.i32
 codegenDecl (Func a b (CompoundStmt c)) =
   function (mkName a) [] AST.i32 $ \[] ->
     mdo _entry <- block `named` "entry"
@@ -72,8 +71,10 @@ codegenStmt (IfElse a b c) = do
 
 codegenExpr :: MonadIRBuilder m => Expr -> m Operand
 codegenExpr (Constant a) = return $ ConstantOperand $ C.Int 32 a
-codegenExpr (Call a b) =
-  call (ConstantOperand (C.GlobalReference AST.i32 (mkName "a"))) []
+codegenExpr (Identifier a) = load (LocalReference AST.i32 (mkName a)) 0
+codegenExpr (Call a b) = do
+  let sig = AST.ptr $ AST.FunctionType AST.i32 [] False
+  call (ConstantOperand (C.GlobalReference sig (mkName a))) []
 codegenExpr (Binary op a b) =
   mdo let binOps =
             Map.fromList
