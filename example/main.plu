@@ -1,0 +1,7 @@
+extern int input();
+
+int main()
+{
+    int a = input();
+    return 0;
+}
