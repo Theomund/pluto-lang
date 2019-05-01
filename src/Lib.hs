@@ -2,12 +2,12 @@ module Lib
   ( someFunc
   ) where
 
-import Analyzer
-import Codegen
-import Parser
-import System.Environment
-import System.IO
-import Text.Megaparsec
+import           Analyzer
+import           Codegen
+import           Parser
+import           System.Environment
+import           System.IO
+import           Text.Megaparsec
 
 someFunc :: IO ()
 someFunc = do
@@ -17,4 +17,7 @@ someFunc = do
     Left bundle -> putStrLn $ errorBundlePretty bundle
     Right xs -> do
       checkMain xs
+      checkFunction xs
+      checkVariable xs
+      checkAssignment xs
       generateModule xs

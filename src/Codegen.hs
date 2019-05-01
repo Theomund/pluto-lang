@@ -1,31 +1,33 @@
-{-# LANGUAGE RecursiveDo #-}
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE RecursiveDo       #-}
+{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE TupleSections     #-}
 
 module Codegen where
 
-import Control.Lens hiding (assign)
-import Control.Lens.Prism
-import Control.Monad
+import           Control.Lens               hiding (assign)
+import           Control.Lens.Prism
+import           Control.Monad
 
-import Data.ByteString.Char8 as BS (pack, putStrLn)
-import Data.ByteString.Short as SH (toShort)
-import qualified Data.Map.Strict as Map
-import Data.String
-import LLVM.AST (Operand(ConstantOperand, LocalReference), mkName)
-import qualified LLVM.AST.Attribute as A
-import qualified LLVM.AST.Constant as C
-import qualified LLVM.AST.IntegerPredicate as IP
-import LLVM.AST.Type as AST
-import LLVM.Context
-import LLVM.IRBuilder.Instruction
-import LLVM.IRBuilder.Module
-import LLVM.IRBuilder.Monad
-import LLVM.Module
-import LLVM.Target
-import Prelude hiding (and, not, or)
-import Syntax
+import           Data.ByteString.Char8      as BS (pack, putStrLn)
+import           Data.ByteString.Short      as SH (toShort)
+import qualified Data.Map.Strict            as Map
+import           Data.String
+import           LLVM.AST                   (Operand (ConstantOperand, LocalReference),
+                                             mkName)
+import qualified LLVM.AST.Attribute         as A
+import qualified LLVM.AST.Constant          as C
+import qualified LLVM.AST.IntegerPredicate  as IP
+import           LLVM.AST.Type              as AST
+import           LLVM.Context
+import           LLVM.IRBuilder.Instruction
+import           LLVM.IRBuilder.Module
+import           LLVM.IRBuilder.Monad
+import           LLVM.Module
+import           LLVM.Target
+import           Prelude                    hiding (and, not, or)
+import           Syntax
 
 makePrisms ''Decl
 
@@ -135,7 +137,7 @@ codegenExpr (Call name args) =
       ops <- mapMOf each codegenExpr args
       call
         (ConstantOperand $ C.GlobalReference sig (mkName name))
-        (over mapped (\x -> (x, [])) ops)
+        (over mapped (, []) ops)
 codegenExpr (Binary op a b) =
   mdo let binOps =
             Map.fromList

@@ -1,14 +1,8 @@
-extern int print(int n);
-extern int input();
+extern int print();
 
 int main() 
-{ 
-    int a = 0;
-    while (a < 10)
-    {
-        print(a);
-        a++;
-    }
+{
+    int a = 2 + 2;
     return 0; 
 } 
   
