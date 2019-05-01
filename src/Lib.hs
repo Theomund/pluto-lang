@@ -2,16 +2,19 @@ module Lib
   ( someFunc
   ) where
 
+import Analyzer
 import Codegen
 import Parser
-import System.IO
 import System.Environment
+import System.IO
 import Text.Megaparsec
 
 someFunc :: IO ()
 someFunc = do
   args <- getArgs
-  input <- readFile (head args)
+  input <- readFile $ head args
   case parse parser "" input of
-    Left bundle -> putStr (errorBundlePretty bundle)
-    Right xs -> generateModule xs
+    Left bundle -> putStrLn $ errorBundlePretty bundle
+    Right xs -> do
+      checkMain xs
+      generateModule xs
