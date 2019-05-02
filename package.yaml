@@ -29,6 +29,7 @@ dependencies:
 - llvm-hs
 - llvm-hs-pure
 - bytestring
+- filepath
 
 library:
   source-dirs: src

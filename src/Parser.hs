@@ -1,10 +1,10 @@
 module Parser where
 
-import           Control.Monad                  (void)
-import           Control.Monad.Combinators.Expr
-import           Lexer
-import           Syntax
-import           Text.Megaparsec
+import Control.Monad (void)
+import Control.Monad.Combinators.Expr
+import Lexer
+import Syntax
+import Text.Megaparsec
 
 constantExpr :: Parser Expr
 constantExpr = Constant <$> integer
