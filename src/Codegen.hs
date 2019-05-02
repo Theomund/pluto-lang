@@ -7,12 +7,10 @@
 module Codegen where
 
 import Control.Lens hiding (assign)
-import Control.Lens.Prism
 import Control.Monad
 import Data.ByteString.Char8 as BS (pack, putStrLn)
 import Data.ByteString.Short as SH (toShort)
 import qualified Data.Map.Strict as Map
-import Data.Maybe
 import qualified Data.Set as Set
 import Data.String
 import LLVM.AST (Operand(ConstantOperand, LocalReference), mkName)
@@ -27,7 +25,7 @@ import LLVM.IRBuilder.Module
 import LLVM.IRBuilder.Monad
 import LLVM.Module
 import LLVM.Target
-import Prelude hiding (and, not, or)
+import Prelude hiding (and, or)
 import Syntax
 
 makePrisms ''Decl
@@ -83,6 +81,8 @@ codegenStmt (ExprStmt exp) params =
               if Set.member id params
                 then store (LocalReference sig (mkName $ id ++ "1")) 0 x
                 else store (LocalReference sig (mkName id)) 0 x
+        (Binary Assign _ _) ->
+          error "The assignment operator only works on identifiers"
         _ ->
           mdo codegenExpr exp params
               return ()
@@ -93,42 +93,69 @@ codegenStmt (CompoundStmt items) params =
       return ()
 codegenStmt (If exp body) params =
   mdo cond <- codegenExpr exp params
-      condBr cond "if.then" "if.exit"
-      block `named` "if.then"
+      ifThen <- freshName $ SH.toShort (BS.pack "if.then")
+      ifExit <- freshName $ SH.toShort (BS.pack "if.exit")
+      condBr cond ifThen ifExit
+      emitBlockStart ifThen
       codegenStmt body params
-      br "if.exit"
-      block `named` "if.exit"
-      return ()
+      hasTerm <- hasTerminator
+      if hasTerm
+        then return ()
+        else br ifExit
+      emitBlockStart ifExit
 codegenStmt (IfElse exp body elseBody) params =
   mdo cond <- codegenExpr exp params
-      condBr cond "if.then" "if.else"
-      block `named` "if.then"
+      ifThen <- freshName $ SH.toShort (BS.pack "if.then")
+      ifElse <- freshName $ SH.toShort (BS.pack "if.else")
+      ifExit <- freshName $ SH.toShort (BS.pack "if.exit")
+      condBr cond ifThen ifElse
+      emitBlockStart ifThen
       codegenStmt body params
-      br "if.exit"
-      block `named` "if.else"
+      hasTerm <- hasTerminator
+      if hasTerm
+        then return ()
+        else br ifExit
+      emitBlockStart ifElse
       codegenStmt elseBody params
-      br "if.exit"
-      block `named` "if.exit"
-      return ()
+      hasTermElse <- hasTerminator
+      if hasTerm && hasTermElse
+        then return ()
+        else if not hasTerm && hasTermElse
+               then return ()
+               else br ifExit
+      emitBlockStart ifExit
 codegenStmt (While exp body) params =
   mdo initCond <- codegenExpr exp params
-      condBr initCond "while.body" "while.exit"
-      block `named` "while.body"
+      whileBody <- freshName $ SH.toShort (BS.pack "while.body")
+      whileExit <- freshName $ SH.toShort (BS.pack "while.exit")
+      condBr initCond whileBody whileExit
+      emitBlockStart whileBody
       codegenStmt body params
-      cond <- codegenExpr exp params
-      condBr cond "while.body" "while.exit"
-      block `named` "while.exit"
+      hasTerm <- hasTerminator
+      if hasTerm
+        then return ()
+        else mdo cond <- codegenExpr exp params
+                 condBr cond whileBody whileExit
+      emitBlockStart whileExit
       return ()
 codegenStmt (DoWhile body exp) params =
-  mdo br "while.body"
-      block `named` "while.body"
+  mdo whileBody <- freshName $ SH.toShort (BS.pack "while.body")
+      whileExit <- freshName $ SH.toShort (BS.pack "while.exit")
+      br whileBody
+      emitBlockStart whileBody
       codegenStmt body params
-      cond <- codegenExpr exp params
-      condBr cond "while.body" "while.exit"
-      block `named` "while.exit"
+      hasTerm <- hasTerminator
+      if hasTerm
+        then return ()
+        else mdo cond <- codegenExpr exp params
+                 condBr cond whileBody whileExit
+      emitBlockStart whileExit
       return ()
 codegenStmt (Return val) params =
-  mdo x <- codegenExpr val params
+  mdo blockName <- freshName $ SH.toShort (BS.pack "return")
+      br blockName
+      emitBlockStart blockName
+      x <- codegenExpr val params
       ret x
 
 codegenExpr :: MonadIRBuilder m => Expr -> Set.Set String -> m Operand
@@ -175,7 +202,12 @@ codegenExpr (Binary op a b) params =
 codegenExpr (Unary op a) params =
   mdo let unOps =
             Map.fromList
-              [(Plus, plus), (Minus, minus), (Inc, inc), (Dec, dec), (Not, not)]
+              [ (Plus, plus)
+              , (Minus, minus)
+              , (Inc, inc)
+              , (Dec, dec)
+              , (Not, lnot)
+              ]
       case Map.lookup op unOps of
         Just f -> f a params
         Nothing -> error "No such operator was found."
@@ -185,7 +217,9 @@ inc (Identifier id) params =
   mdo x <- codegenExpr (Identifier id) params
       result <- add x (ConstantOperand $ C.Int 32 1)
       let sig = AST.ptr $ AST.IntegerType 32
-      store (LocalReference sig (mkName id)) 0 result
+      if Set.member id params
+        then store (LocalReference sig (mkName $ id ++ "1")) 0 result
+        else store (LocalReference sig (mkName id)) 0 result
       return result
 inc _ _ = error "The increment operator can only work on identifiers."
 
@@ -194,7 +228,9 @@ dec (Identifier id) params =
   mdo x <- codegenExpr (Identifier id) params
       result <- sub x (ConstantOperand $ C.Int 32 1)
       let sig = AST.ptr $ AST.IntegerType 32
-      store (LocalReference sig (mkName id)) 0 result
+      if Set.member id params
+        then store (LocalReference sig (mkName $ id ++ "1")) 0 result
+        else store (LocalReference sig (mkName id)) 0 result
       return result
 dec _ _ = error "The decrement operator can only work on identifiers."
 
@@ -226,8 +262,8 @@ plus a params =
       block `named` "if.exit"
       phi [(trueVal, "if.then"), (falseVal, "if.else")]
 
-not :: MonadIRBuilder m => Expr -> Set.Set String -> m Operand
-not a params =
+lnot :: MonadIRBuilder m => Expr -> Set.Set String -> m Operand
+lnot a params =
   mdo x <- codegenExpr a params
       cond <- icmp IP.EQ x (ConstantOperand (C.Int 32 0))
       condBr cond "if.then" "if.else"

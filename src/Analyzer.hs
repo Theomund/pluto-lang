@@ -43,7 +43,4 @@ checkVariable xs = do
   let names = Seq.fromList list
   let uniqueNames = Set.fromList list
   when (length names /= length uniqueNames) $
-    error "A program cannot have duplicate variables."
-
-checkAssignment :: [Decl] -> IO ()
-checkAssignment xs = return ()
+    error "A program cannot have duplicate global variables."

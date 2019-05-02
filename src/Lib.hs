@@ -6,8 +6,8 @@ import Analyzer
 import Codegen
 import Parser
 import System.Environment
-import System.IO
 import System.FilePath
+import System.IO
 import Text.Megaparsec
 
 someFunc :: IO ()
@@ -21,5 +21,4 @@ someFunc = do
       checkMain xs
       checkFunction xs
       checkVariable xs
-      checkAssignment xs
       generateModule xs name
