@@ -1,5 +1,5 @@
 module Lib
-  ( someFunc
+  ( compile
   ) where
 
 import Analyzer
@@ -10,8 +10,9 @@ import System.FilePath
 import System.IO
 import Text.Megaparsec
 
-someFunc :: IO ()
-someFunc = do
+-- | The 'compile' function begins the compilation process.
+compile :: IO ()
+compile = do
   args <- getArgs
   input <- readFile $ head args
   let name = replaceExtension (head args) ".o"

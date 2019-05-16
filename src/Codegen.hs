@@ -36,6 +36,7 @@ makePrisms ''Stmt
 
 makePrisms ''Item
 
+-- | The 'generateModule' function generates a LLVM module given an abstract syntax tree.
 generateModule :: [Decl] -> String -> IO ()
 generateModule xs name =
   mdo let mod = buildModule "exampleModule" $ traverseOf_ each codegenDecl xs
@@ -45,6 +46,7 @@ generateModule xs name =
               BS.putStrLn llvm
               withModuleFromAST ctx mod (writeObjectToFile tm (File name))
 
+-- | The 'codegenDecl' function generates LLVM intermediate representation code from a declaration.
 codegenDecl :: MonadModuleBuilder m => Decl -> m Operand
 codegenDecl (Var name (Constant n)) = global (mkName name) AST.i32 (C.Int 32 n)
 codegenDecl (Extern name args) =
@@ -64,6 +66,7 @@ codegenDecl (Func name args body) =
                   store var 0 (t ^. _2)
             codegenStmt body (Set.fromList names)
 
+-- | The 'codegenLocal' function generates LLVM intermediate representation code from local variable declarations.
 codegenLocal :: MonadIRBuilder m => Decl -> Set.Set String -> m ()
 codegenLocal (Var name val) params =
   mdo x <- codegenExpr val params
@@ -72,6 +75,7 @@ codegenLocal (Var name val) params =
       let sig = AST.ptr $ AST.IntegerType 32
       store (LocalReference sig (mkName name)) 0 x
 
+-- | The 'codegenStmt' function generates LLVM intermediate representation code from statements.
 codegenStmt :: MonadIRBuilder m => Stmt -> Set.Set String -> m ()
 codegenStmt (ExprStmt exp) params =
   mdo case exp of
@@ -158,6 +162,7 @@ codegenStmt (Return val) params =
       x <- codegenExpr val params
       ret x
 
+-- | The 'codegenStmt' function generates LLVM intermediate representation code from expressions.
 codegenExpr :: MonadIRBuilder m => Expr -> Set.Set String -> m Operand
 codegenExpr (Constant n) _ = return $ ConstantOperand $ C.Int 32 n
 codegenExpr (Identifier id) params =
@@ -212,6 +217,7 @@ codegenExpr (Unary op a) params =
         Just f -> f a params
         Nothing -> error "No such operator was found."
 
+-- | The 'inc' function generates LLVM intermediate representation code from increment expressions.
 inc :: MonadIRBuilder m => Expr -> Set.Set String -> m Operand
 inc (Identifier id) params =
   mdo x <- codegenExpr (Identifier id) params
@@ -223,6 +229,7 @@ inc (Identifier id) params =
       return result
 inc _ _ = error "The increment operator can only work on identifiers."
 
+-- | The 'dec' function generates LLVM intermediate representation code from decrement expressions.
 dec :: MonadIRBuilder m => Expr -> Set.Set String -> m Operand
 dec (Identifier id) params =
   mdo x <- codegenExpr (Identifier id) params
@@ -234,6 +241,7 @@ dec (Identifier id) params =
       return result
 dec _ _ = error "The decrement operator can only work on identifiers."
 
+-- | The 'minus' function generates LLVM intermediate representation code from unary minus expressions.
 minus :: MonadIRBuilder m => Expr -> Set.Set String -> m Operand
 minus a params =
   mdo x <- codegenExpr a params
@@ -248,6 +256,7 @@ minus a params =
       block `named` "if.exit"
       phi [(trueVal, "if.then"), (falseVal, "if.else")]
 
+-- | The 'plus' function generates LLVM intermediate representation code from unary plus expressions.
 plus :: MonadIRBuilder m => Expr -> Set.Set String -> m Operand
 plus a params =
   mdo x <- codegenExpr a params
@@ -262,6 +271,7 @@ plus a params =
       block `named` "if.exit"
       phi [(trueVal, "if.then"), (falseVal, "if.else")]
 
+-- | The 'lnot' function generates LLVM intermediate representation code from unary logical not expressions.
 lnot :: MonadIRBuilder m => Expr -> Set.Set String -> m Operand
 lnot a params =
   mdo x <- codegenExpr a params

@@ -11,38 +11,25 @@ type Name = String
 data Stmt
   = ExprStmt Expr
   | CompoundStmt [Item]
-  | If Expr
-       Stmt
-  | IfElse Expr
-           Stmt
-           Stmt
-  | While Expr
-          Stmt
-  | DoWhile Stmt
-            Expr
+  | If Expr Stmt
+  | IfElse Expr Stmt Stmt
+  | While Expr Stmt
+  | DoWhile Stmt Expr
   | Return Expr
   deriving (Eq, Ord, Show, Read, Data, Typeable)
 
 data Expr
   = Constant Integer
   | Identifier String
-  | Call Name
-         [Expr]
-  | Binary Op
-           Expr
-           Expr
-  | Unary Op
-          Expr
+  | Call Name [Expr]
+  | Binary Op Expr Expr
+  | Unary Op Expr
   deriving (Eq, Ord, Show, Read, Data, Typeable)
 
 data Decl
-  = Extern Name
-           [Expr]
-  | Func Name
-         [Expr]
-         Stmt
-  | Var Name
-        Expr
+  = Extern Name [Expr]
+  | Func Name [Expr] Stmt
+  | Var Name Expr
   deriving (Eq, Ord, Show, Read, Data, Typeable)
 
 data Item

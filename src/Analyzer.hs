@@ -19,6 +19,7 @@ makePrisms ''Stmt
 
 makePrisms ''Item
 
+-- | The 'checkMain' function checks for the presence of a valid main function.
 checkMain :: [Decl] -> IO ()
 checkMain [] = error "No function declarations were found."
 checkMain xs = do
@@ -29,6 +30,7 @@ checkMain xs = do
     Just [] -> return ()
     Just _ -> error "A main function cannot have any arguments."
 
+-- | The 'checkFunction' function checks for the presence of duplicate functions.
 checkFunction :: [Decl] -> IO ()
 checkFunction xs = do
   let list = catMaybes $ over mapped (\x -> x ^? _Func . _1) xs
@@ -37,6 +39,7 @@ checkFunction xs = do
   when (length names /= length uniqueNames) $
     error "A program cannot have duplicate functions."
 
+-- | The 'checkVariable' function checks for the presence of duplicate global variables.
 checkVariable :: [Decl] -> IO ()
 checkVariable xs = do
   let list = catMaybes $ over mapped (\x -> x ^? _Var . _1) xs
