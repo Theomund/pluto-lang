@@ -40,7 +40,7 @@ rword w = (lexeme . try) (string w *> notFollowedBy alphaNumChar)
 
 -- | The 'rws' function defines a list for reserved words.
 rws :: [String]
-rws = ["do", "if", "else", "while", "return", "int", "extern"]
+rws = ["do", "if", "else", "while", "return", "fun", "var", "extern"]
 
 -- | The 'identifier' function defines a parser for parsing identifiers.
 identifier :: Parser String

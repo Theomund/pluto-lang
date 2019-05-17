@@ -129,25 +129,25 @@ stmt =
 -- | The 'funcDecl' function defines a parser for function declarations.
 funcDecl :: Parser Decl
 funcDecl = do
-  rword "int"
+  rword "fun"
   name <- identifier
-  params <- parens $ sepBy (rword "int" >> identifierExpr) (symbol ",")
+  params <- parens $ sepBy (rword "var" >> identifierExpr) (symbol ",")
   Func name params <$> compoundStmt
 
 -- | The 'externDecl' function defines a parser for external function declarations.
 externDecl :: Parser Decl
 externDecl = do
   rword "extern"
-  rword "int"
+  rword "fun"
   name <- identifier
-  params <- parens $ sepBy (rword "int" >> identifierExpr) (symbol ",")
+  params <- parens $ sepBy (rword "var" >> identifierExpr) (symbol ",")
   symbol ";"
   return $ Extern name params
 
 -- | The 'varDecl' function defines a parser for variable declarations.
 varDecl :: Parser Decl
 varDecl = do
-  rword "int"
+  rword "var"
   name <- identifier
   symbol "="
   value <- expr
