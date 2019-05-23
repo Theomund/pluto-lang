@@ -12,7 +12,7 @@ int print(int n)
     return 0;
 }
 
-int input()
+int input(void)
 {
     int a = 0;
     scanf("%d", &a);
